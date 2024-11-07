@@ -51,7 +51,17 @@ The `docker-compose.yml` file sets up the necessary services to run Dapr and you
    - **Image**: `daprio/daprd:edge`
    - **Ports**: 3501:3501, 3502:3502
    - **Command**: 
-     - `./daprd --app-id starter-service --app-port 3000 --dapr-http-port 3501 --dapr-grpc-port 3502 --placement-host-address placement:3500 --resources-path /dapr/components --config /dapr/config.yaml`
+    ```bash
+      ./daprd \
+        --app-id starter-service \  # Specifies the unique identifier for the application. This ID is used for tracking and managing the service.
+        --app-port 3000 \  # Defines the application’s HTTP port. The application listens on port 3000.
+        --dapr-http-port 3501 \  # Sets the HTTP port (3501) for Dapr to communicate with other services over HTTP.
+        --dapr-grpc-port 3502 \  # Configures the gRPC port (3502) for faster communication with lower latency.
+        --placement-host-address placement:3500 \  # Points to the Dapr placement service, which manages service state and actor locations.
+        --resources-path /dapr/components \  # Specifies the directory containing the Dapr component files (e.g., state stores, pub/sub).
+        --config /dapr/config.yaml # Path to the Dapr configuration file, which includes component configurations and other settings.
+      
+    ```
    - **Environment**: `DAPR_LOG_LEVEL=debug`
    - **Description**: Dapr sidecar for the starter service that provides features like state, pub/sub, and secret management.
 
