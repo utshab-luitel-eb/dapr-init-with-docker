@@ -1,0 +1,56 @@
+services:
+  placement:
+    image: "daprio/dapr"
+    command: ["./placement", "-port", "3500"]
+    ports:
+      - 3500:3500
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - 6379:6379
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - 9411:9411
+  db:
+    image: postgres:16.3-alpine3.20
+    volumes:
+      - ./tmp/db/data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: starter_db_dev
+  starter-service:
+    build:
+      context: ./starter
+      target: development
+    working_dir: /app
+    command: yarn start:dev
+    volumes:
+      - ./starter:/app
+    ports:
+      - 3501:3501
+    depends_on:
+      - redis
+      - placement
+      - zipkin
+  starter-service-dapr:
+    image: daprio/daprd:edge
+    command:
+      ["./daprd",
+        "--app-id", "starter-service",
+        "--app-port", "3000",
+        "--dapr-http-port", "3501",
+        "--dapr-grpc-port", "3502",
+        "--placement-host-address", "placement:3500",
+        "--resources-path", "/dapr/components",
+        "--config", "/dapr/config.yaml"]
+    environment:
+      - "DAPR_LOG_LEVEL=debug"  # Enables all levels of logs
+    volumes:
+      - ".dapr:/dapr"
+    depends_on:
+      - starter-service
+    network_mode: service:starter-service
